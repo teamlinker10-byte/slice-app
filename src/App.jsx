@@ -84,6 +84,7 @@ export default function App() {
   const [query, setQuery]             = useState('')
   const [results, setResults]         = useState([])
   const [loading, setLoading]         = useState(false)
+  const [searchError, setSearchError] = useState('')
   const [phase, setPhase]             = useState('whole')
   const [collagePos, setCollagePos]   = useState([])
 
@@ -91,12 +92,25 @@ export default function App() {
     e.preventDefault()
     if (!query.trim()) return
     setLoading(true)
+    setSearchError('')
     try {
-      const res  = await fetch(`${TMDB_URL}/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(query)}&language=ko-KR`)
-      const data = await res.json()
-      setResults(data.results?.slice(0, 8) || [])
-    } catch { /* silent */ }
-    finally { setLoading(false) }
+      const base = `${TMDB_URL}/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(query.trim())}`
+      const [r1, r2] = await Promise.all([
+        fetch(`${base}&language=ko-KR`).then(r => r.json()),
+        fetch(`${base}&language=en-US`).then(r => r.json()),
+      ])
+      const seen = new Set()
+      const merged = []
+      for (const m of [...(r1.results || []), ...(r2.results || [])]) {
+        if (!seen.has(m.id)) { seen.add(m.id); merged.push(m) }
+      }
+      setResults(merged.slice(0, 12))
+      if (merged.length === 0) setSearchError('검색 결과가 없습니다.')
+    } catch {
+      setSearchError('검색에 실패했습니다. 다시 시도해주세요.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const addIngredient = useCallback((movie) => {
@@ -203,6 +217,7 @@ export default function App() {
             <button className="sp-btn" type="submit">검색</button>
           </form>
           {loading && <p className="sp-hint">검색 중...</p>}
+          {!loading && searchError && <p className="sp-hint sp-error">{searchError}</p>}
           <div className="sp-results">
             {results.map(movie => {
               const added = ingredients.some(m => m.id === movie.id)

@@ -240,6 +240,7 @@ html, body, #root {
 .sp-btn:hover { background: #333; }
 
 .sp-hint { font-size: 0.73rem; color: #bbb; text-align: center; }
+.sp-error { color: #e8453c; }
 
 .sp-results {
   overflow-y: auto;
