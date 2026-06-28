@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import './App.css'
 
 const API_KEY  = import.meta.env.VITE_TMDB_API_KEY
@@ -85,21 +85,34 @@ export default function App() {
   const [phase, setPhase]             = useState('whole')
   const [collagePos, setCollagePos]   = useState([])
 
-  async function searchMovies(e) {
-    e.preventDefault()
-    if (!query.trim()) return
+  async function doSearch(q) {
+    const trimmed = q.trim()
+    if (!trimmed) { setResults([]); setSearchError(''); return }
     setLoading(true)
     setSearchError('')
     try {
-      const base = `${TMDB_URL}/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(query.trim())}`
-      const [r1, r2] = await Promise.all([
-        fetch(`${base}&language=ko-KR`).then(r => r.json()),
-        fetch(`${base}&language=en-US`).then(r => r.json()),
-      ])
+      const noSpace = trimmed.replace(/\s+/g, '')
+      const variants = new Set([trimmed, noSpace])
+      // 공백 없는 쿼리는 가능한 모든 위치에 공백 삽입해서 추가 검색
+      if (!trimmed.includes(' ') && noSpace.length >= 3 && noSpace.length <= 12) {
+        for (let i = 1; i < noSpace.length; i++) {
+          variants.add(noSpace.slice(0, i) + ' ' + noSpace.slice(i))
+        }
+      }
+      const fetches = [...variants].flatMap(qStr => {
+        const base = `${TMDB_URL}/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(qStr)}`
+        return [
+          fetch(`${base}&language=ko-KR`).then(r => r.json()),
+          fetch(`${base}&language=en-US`).then(r => r.json()),
+        ]
+      })
+      const responses = await Promise.all(fetches)
       const seen = new Set()
       const merged = []
-      for (const m of [...(r1.results || []), ...(r2.results || [])]) {
-        if (!seen.has(m.id)) { seen.add(m.id); merged.push(m) }
+      for (const data of responses) {
+        for (const m of (data.results || [])) {
+          if (!seen.has(m.id)) { seen.add(m.id); merged.push(m) }
+        }
       }
       setResults(merged.slice(0, 12))
       if (merged.length === 0) setSearchError('검색 결과가 없습니다.')
@@ -108,6 +121,17 @@ export default function App() {
     } finally {
       setLoading(false)
     }
+  }
+
+  useEffect(() => {
+    if (!searchOpen) return
+    const timer = setTimeout(() => doSearch(query), 350)
+    return () => clearTimeout(timer)
+  }, [query, searchOpen])
+
+  function searchMovies(e) {
+    e.preventDefault()
+    doSearch(query)
   }
 
   const addIngredient = useCallback((movie) => {
