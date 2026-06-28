@@ -1,0 +1,228 @@
+import { useState, useRef, useCallback } from 'react'
+import './App.css'
+
+const API_KEY  = import.meta.env.VITE_TMDB_API_KEY
+const TMDB_URL = 'https://api.themoviedb.org/3'
+const POSTER   = 'https://image.tmdb.org/t/p/w185'
+
+const CARD_W = 204
+const CARD_H = 82
+
+const cakes = [
+  { id: 1, name: '클래식 화이트',   img: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=900&q=80', thumb: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=120&h=120&q=70' },
+  { id: 2, name: '초콜릿 가나슈',   img: 'https://images.unsplash.com/photo-1606890737304-57a1ca8a5b62?auto=format&fit=crop&w=900&q=80', thumb: 'https://images.unsplash.com/photo-1606890737304-57a1ca8a5b62?auto=format&fit=crop&w=120&h=120&q=70' },
+  { id: 3, name: '레몬 시폰',       img: 'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?auto=format&fit=crop&w=900&q=80', thumb: 'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?auto=format&fit=crop&w=120&h=120&q=70' },
+  { id: 4, name: '딸기 쇼트케이크', img: 'https://images.unsplash.com/photo-1488477181946-f4c5ee2cf9e9?auto=format&fit=crop&w=900&q=80', thumb: 'https://images.unsplash.com/photo-1488477181946-f4c5ee2cf9e9?auto=format&fit=crop&w=120&h=120&q=70' },
+  { id: 5, name: '말차 오페라',     img: 'https://images.unsplash.com/photo-1535141192574-5d4897c12636?auto=format&fit=crop&w=900&q=80', thumb: 'https://images.unsplash.com/photo-1535141192574-5d4897c12636?auto=format&fit=crop&w=120&h=120&q=70' },
+  { id: 6, name: '카라멜 솔트',     img: 'https://images.unsplash.com/photo-1570145820259-b5f397cbf8a9?auto=format&fit=crop&w=900&q=80', thumb: 'https://images.unsplash.com/photo-1570145820259-b5f397cbf8a9?auto=format&fit=crop&w=120&h=120&q=70' },
+]
+
+function findFreePos(existing, cW, cH) {
+  const gap = 16, margin = 80
+  for (let t = 0; t < 400; t++) {
+    const x = margin + Math.random() * (cW - CARD_W - margin * 2)
+    const y = margin + Math.random() * (cH - CARD_H - margin * 2 - 80)
+    const ok = !existing.some(
+      p => x < p.x + p.w + gap && x + CARD_W + gap > p.x && y < p.y + p.h + gap && y + CARD_H + gap > p.y
+    )
+    if (ok) return { x, y, w: CARD_W, h: CARD_H }
+  }
+  const i = existing.length
+  return { x: margin + (i % 3) * (CARD_W + gap), y: margin + Math.floor(i / 3) * (CARD_H + gap), w: CARD_W, h: CARD_H }
+}
+
+function genCollagePos(count, cW, cH, pW, pH, gap = 10) {
+  const placed = []
+  for (let i = 0; i < count; i++) {
+    let pos = null
+    for (let t = 0; t < 300; t++) {
+      const x = gap + Math.random() * (cW - pW - gap * 2)
+      const y = gap + Math.random() * (cH - pH - gap * 2)
+      if (!placed.some(p => x < p.x + p.w + gap && x + pW + gap > p.x && y < p.y + p.h + gap && y + pH + gap > p.y)) {
+        pos = { x, y, w: pW, h: pH }; break
+      }
+    }
+    if (!pos) {
+      const cols = Math.ceil(Math.sqrt(count))
+      pos = { x: (i % cols) * (pW + gap) + gap, y: Math.floor(i / cols) * (pH + gap) + gap, w: pW, h: pH }
+    }
+    placed.push(pos)
+  }
+  return placed
+}
+
+function KnifeIcon() {
+  return (
+    <svg viewBox="0 0 56 80" width="18" height="26" fill="none">
+      <path d="M8 54 L28 6 L48 54 Z" fill="#ccc" stroke="#aaa" strokeWidth="1.5" strokeLinejoin="round"/>
+      <rect x="6" y="54" width="44" height="6" rx="2" fill="#8B5E3C"/>
+      <rect x="20" y="60" width="16" height="16" rx="3.5" fill="#6B3F22"/>
+    </svg>
+  )
+}
+
+function MovieCard({ movie, onRemove }) {
+  return (
+    <div className="movie-card" style={{ left: movie.pos.x, top: movie.pos.y }}>
+      <button className="card-x" onClick={() => onRemove(movie.id)}>✕</button>
+      {movie.poster_path
+        ? <img className="card-poster" src={`${POSTER}${movie.poster_path}`} alt="" />
+        : <div className="card-poster no-poster" />}
+      <div className="card-info">
+        <p className="card-title">{movie.title}</p>
+        {movie.release_date && <p className="card-year">{movie.release_date.slice(0, 4)}</p>}
+      </div>
+    </div>
+  )
+}
+
+export default function App() {
+  const canvasRef   = useRef(null)
+  const [cake, setCake]           = useState(cakes[0])
+  const [ingredients, setIngredients] = useState([])
+  const [searchOpen, setSearchOpen]   = useState(false)
+  const [query, setQuery]             = useState('')
+  const [results, setResults]         = useState([])
+  const [loading, setLoading]         = useState(false)
+  const [phase, setPhase]             = useState('whole')
+  const [collagePos, setCollagePos]   = useState([])
+
+  async function searchMovies(e) {
+    e.preventDefault()
+    if (!query.trim()) return
+    setLoading(true)
+    try {
+      const res  = await fetch(`${TMDB_URL}/search/movie?api_key=${API_KEY}&query=${encodeURIComponent(query)}&language=ko-KR`)
+      const data = await res.json()
+      setResults(data.results?.slice(0, 8) || [])
+    } catch { /* silent */ }
+    finally { setLoading(false) }
+  }
+
+  const addIngredient = useCallback((movie) => {
+    if (ingredients.find(m => m.id === movie.id)) return
+    const el  = canvasRef.current
+    const pos = findFreePos(ingredients.map(m => m.pos), el?.offsetWidth || 900, el?.offsetHeight || 600)
+    setIngredients(prev => [...prev, { ...movie, pos }])
+  }, [ingredients])
+
+  function removeIngredient(id) {
+    setIngredients(prev => prev.filter(m => m.id !== id))
+  }
+
+  function handleCut() {
+    const W = 340, H = 420
+    setCollagePos(genCollagePos(ingredients.length, W - 16, H - 16, 68, 98))
+    setPhase('cutting')
+    setTimeout(() => setPhase('sliced'), 900)
+  }
+
+  function reset() {
+    setPhase('whole'); setIngredients([]); setQuery(''); setResults([])
+  }
+
+  function changeCake(c) {
+    setCake(c); reset()
+  }
+
+  return (
+    <div className="canvas" ref={canvasRef}>
+
+      {/* ── CAKE BACKGROUND ── */}
+      <div className="cake-bg-wrap">
+        <img key={cake.id} className="cake-bg" src={cake.img} alt="" />
+        <div className="cake-vignette" />
+      </div>
+
+      {/* ── FLOATING MOVIE CARDS ── */}
+      {phase !== 'sliced' && ingredients.map(movie => (
+        <MovieCard key={movie.id} movie={movie} onRemove={phase === 'whole' ? removeIngredient : () => {}} />
+      ))}
+
+      {/* ── CUTTING LINE ── */}
+      {phase === 'cutting' && <div className="cut-line" />}
+
+      {/* ── SLICED VIEW ── */}
+      {phase === 'sliced' && (
+        <div className="slice-modal">
+          <div className="cross-section">
+            <div className="layer sponge" />
+            <div className="layer cream" />
+            <div className="layer sponge" />
+            <div className="layer cream" />
+            <div className="layer sponge" />
+            {ingredients.map((movie, i) => {
+              const p = collagePos[i]
+              if (!p) return null
+              return (
+                <div key={movie.id} className="collage-poster" style={{ left: p.x, top: p.y, animationDelay: `${i * 75}ms` }}>
+                  {movie.poster_path
+                    ? <img src={`${POSTER}${movie.poster_path}`} alt={movie.title} />
+                    : <div className="collage-fallback">{movie.title[0]}</div>}
+                </div>
+              )
+            })}
+          </div>
+          <p className="slice-cake-name">{cake.name}</p>
+          <button className="btn-reset" onClick={reset}>← 처음으로</button>
+        </div>
+      )}
+
+      {/* ── LOGO ── */}
+      <p className="ui-logo">Slice</p>
+
+      {/* ── CAKE SELECTOR · bottom-left ── */}
+      <div className="ui-cake-selector">
+        {cakes.map(c => (
+          <div key={c.id} className={`cake-mini ${cake.id === c.id ? 'active' : ''}`} onClick={() => changeCake(c)}>
+            <img src={c.thumb} alt={c.name} />
+          </div>
+        ))}
+      </div>
+
+      {/* ── ACTION BUTTONS · bottom-right ── */}
+      {phase === 'whole' && (
+        <div className="ui-actions">
+          {ingredients.length >= 4 && (
+            <button className="btn-cut" onClick={handleCut}>
+              <KnifeIcon /> 케이크 자르기
+            </button>
+          )}
+          <button className="btn-add" onClick={() => setSearchOpen(v => !v)}>
+            {searchOpen ? '닫기' : '영화 추가'}
+          </button>
+        </div>
+      )}
+
+      {/* ── SEARCH PANEL ── */}
+      {searchOpen && phase === 'whole' && (
+        <div className="search-panel">
+          <form onSubmit={searchMovies} className="sp-form">
+            <input className="sp-input" placeholder="영화 제목 검색..." value={query}
+              onChange={e => setQuery(e.target.value)} autoFocus />
+            <button className="sp-btn" type="submit">검색</button>
+          </form>
+          {loading && <p className="sp-hint">검색 중...</p>}
+          <div className="sp-results">
+            {results.map(movie => {
+              const added = ingredients.some(m => m.id === movie.id)
+              return (
+                <div key={movie.id} className={`sp-item ${added ? 'added' : ''}`} onClick={() => addIngredient(movie)}>
+                  {movie.poster_path
+                    ? <img className="sp-thumb" src={`${POSTER}${movie.poster_path}`} alt="" />
+                    : <div className="sp-thumb no-thumb" />}
+                  <div className="sp-info">
+                    <p className="sp-title">{movie.title}</p>
+                    {movie.release_date && <p className="sp-year">{movie.release_date.slice(0, 4)}</p>}
+                  </div>
+                  <span className="sp-badge">{added ? '✓' : '+'}</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+    </div>
+  )
+}

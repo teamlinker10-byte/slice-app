@@ -1,0 +1,171 @@
+.cake-page {
+  background: #f7f5f0;
+  min-height: 100vh;
+  color: #111;
+  padding: 32px 32px 100px;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.cake-logo {
+  font-size: 1.6rem;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  margin-bottom: 28px;
+  color: #111;
+}
+
+.cake-layout {
+  display: flex;
+  gap: 16px;
+  height: calc(100vh - 160px);
+}
+
+.cake-hero {
+  flex: 1;
+  position: relative;
+  border-radius: 20px;
+  overflow: hidden;
+  background: #ddd;
+}
+
+.cake-hero-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: opacity 0.3s ease;
+}
+
+.cake-overlay-card {
+  position: absolute;
+  bottom: 36px;
+  left: 36px;
+  right: 36px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 14px;
+  padding: 22px 26px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.overlay-label {
+  font-size: 0.7rem;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 8px;
+}
+
+.cake-overlay-card h2 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 5px;
+  color: #111;
+}
+
+.overlay-desc {
+  font-size: 0.85rem;
+  color: #666;
+  line-height: 1.5;
+}
+
+.cake-strip {
+  width: 88px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  padding-right: 2px;
+  scrollbar-width: none;
+}
+
+.cake-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.cake-thumb {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2.5px solid transparent;
+  aspect-ratio: 1;
+  transition: border-color 0.15s, transform 0.15s;
+  flex-shrink: 0;
+}
+
+.cake-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.cake-thumb:hover {
+  transform: scale(1.04);
+}
+
+.cake-thumb.active {
+  border-color: #111;
+}
+
+.cake-thumb.picked {
+  border-color: #c84b4b;
+}
+
+.cake-thumb.active.picked {
+  border-color: #c84b4b;
+}
+
+.check-badge {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: #c84b4b;
+  color: white;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.cake-footer {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: white;
+  padding: 10px 10px 10px 20px;
+  border-radius: 50px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.12);
+}
+
+.footer-count {
+  font-size: 0.85rem;
+  color: #555;
+  font-weight: 500;
+}
+
+.done-btn {
+  background: #111;
+  color: white;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 50px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.done-btn:hover {
+  background: #333;
+}

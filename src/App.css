@@ -1,0 +1,379 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body, #root {
+  width: 100%; height: 100vh;
+  overflow: hidden;
+  font-family: 'Segoe UI', system-ui, sans-serif;
+}
+
+/* ── CANVAS ── */
+.canvas {
+  position: relative;
+  width: 100%; height: 100vh;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* ── CAKE BACKGROUND ── */
+.cake-bg-wrap {
+  position: absolute;
+  inset: 0;
+}
+
+.cake-bg {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  transition: opacity 0.5s ease;
+}
+
+.cake-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.35) 100%);
+  pointer-events: none;
+}
+
+/* ── FLOATING MOVIE CARDS ── */
+.movie-card {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 204px;
+  background: rgba(255, 255, 255, 0.93);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border-radius: 13px;
+  padding: 8px 10px 8px 8px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.28);
+  animation: card-pop 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  cursor: default;
+}
+
+@keyframes card-pop {
+  from { transform: scale(0.5) rotate(-6deg); opacity: 0; }
+  to   { transform: scale(1) rotate(0deg);    opacity: 1; }
+}
+
+.card-x {
+  position: absolute;
+  top: -9px; right: -9px;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  border: none;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.22);
+  color: #888;
+  font-size: 9px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s, color 0.15s;
+  line-height: 1;
+}
+.card-x:hover { background: #e84040; color: #fff; }
+
+.card-poster {
+  width: 40px; height: 58px;
+  border-radius: 5px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.no-poster { background: #ddd; }
+
+.card-info { flex: 1; overflow: hidden; }
+
+.card-title {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #111;
+  line-height: 1.35;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.card-year {
+  font-size: 0.68rem;
+  color: #999;
+  margin-top: 3px;
+}
+
+/* ── LOGO ── */
+.ui-logo {
+  position: fixed;
+  top: 28px; left: 32px;
+  font-size: 1.9rem;
+  font-weight: 900;
+  letter-spacing: -1px;
+  color: #fff;
+  text-shadow: 0 2px 16px rgba(0,0,0,0.45);
+  pointer-events: none;
+  z-index: 100;
+}
+
+/* ── CAKE SELECTOR · bottom-left ── */
+.ui-cake-selector {
+  position: fixed;
+  bottom: 28px; left: 28px;
+  display: grid;
+  grid-template-columns: repeat(3, 42px);
+  gap: 8px;
+  z-index: 100;
+}
+
+.cake-mini {
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  border: 2.5px solid rgba(255,255,255,0.35);
+  transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+}
+.cake-mini:hover { transform: scale(1.1); }
+.cake-mini.active {
+  border-color: #fff;
+  box-shadow: 0 0 0 2.5px rgba(255,255,255,0.5);
+}
+.cake-mini img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* ── ACTION BUTTONS · bottom-right ── */
+.ui-actions {
+  position: fixed;
+  bottom: 28px; right: 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 100;
+}
+
+.btn-add {
+  background: #e8453c;
+  color: #fff;
+  border: none;
+  border-radius: 24px;
+  padding: 12px 24px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.3);
+  transition: background 0.2s, transform 0.15s;
+  letter-spacing: 0.2px;
+}
+.btn-add:hover { background: #c93a32; transform: translateY(-2px); }
+
+.btn-cut {
+  background: rgba(255,255,255,0.88);
+  backdrop-filter: blur(10px);
+  color: #222;
+  border: none;
+  border-radius: 24px;
+  padding: 11px 20px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.22);
+  display: flex; align-items: center; gap: 8px;
+  transition: background 0.2s, transform 0.15s;
+  animation: btn-appear 0.4s cubic-bezier(0.34,1.4,0.64,1) both;
+}
+.btn-cut:hover { background: #fff; transform: translateY(-2px); }
+
+@keyframes btn-appear {
+  from { opacity: 0; transform: scale(0.8) translateY(6px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* ── SEARCH PANEL ── */
+.search-panel {
+  position: fixed;
+  bottom: 82px; right: 28px;
+  width: 296px;
+  background: rgba(255,255,255,0.96);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-radius: 18px;
+  padding: 14px;
+  box-shadow: 0 10px 36px rgba(0,0,0,0.28);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 66vh;
+  animation: panel-up 0.28s cubic-bezier(0.34,1.4,0.64,1) both;
+}
+
+@keyframes panel-up {
+  from { opacity: 0; transform: translateY(14px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1);    }
+}
+
+.sp-form { display: flex; gap: 7px; }
+
+.sp-input {
+  flex: 1;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 9px;
+  padding: 9px 12px;
+  font-size: 0.83rem;
+  color: #111;
+  outline: none;
+  transition: border-color 0.15s;
+  background: #fff;
+}
+.sp-input:focus { border-color: #bbb; }
+
+.sp-btn {
+  background: #111;
+  color: #fff;
+  border: none;
+  border-radius: 9px;
+  padding: 9px 14px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.sp-btn:hover { background: #333; }
+
+.sp-hint { font-size: 0.73rem; color: #bbb; text-align: center; }
+
+.sp-results {
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  scrollbar-width: thin;
+  scrollbar-color: #ddd transparent;
+}
+
+.sp-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.12s;
+}
+.sp-item:hover { background: #f4f4f4; }
+.sp-item.added { background: #f0faf0; }
+
+.sp-thumb {
+  width: 30px; height: 44px;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.no-thumb { background: #e0e0e0; }
+
+.sp-info { flex: 1; overflow: hidden; }
+
+.sp-title {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #111;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sp-year { font-size: 0.68rem; color: #aaa; margin-top: 2px; }
+
+.sp-badge { font-size: 0.9rem; color: #ccc; flex-shrink: 0; }
+.sp-item.added .sp-badge { color: #4caf50; }
+
+/* ── CUTTING ANIMATION ── */
+.cut-line {
+  position: absolute;
+  top: 0; left: 50%;
+  width: 2px; height: 100%;
+  transform: translateX(-50%);
+  background: linear-gradient(to bottom, rgba(255,255,255,0.95) 0%, rgba(200,175,140,0.5) 100%);
+  box-shadow: 0 0 18px rgba(255,255,255,0.7);
+  animation: cut-draw 0.65s ease forwards, cut-fade 0.25s ease 0.7s forwards;
+  clip-path: inset(0 0 100% 0);
+}
+
+@keyframes cut-draw {
+  from { clip-path: inset(0 0 100% 0); }
+  to   { clip-path: inset(0 0 0% 0);   }
+}
+@keyframes cut-fade {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+
+/* ── SLICED VIEW ── */
+.slice-modal {
+  position: absolute;
+  inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 18px;
+  background: rgba(0,0,0,0.52);
+  backdrop-filter: blur(5px);
+  z-index: 50;
+  animation: modal-in 0.45s ease both;
+}
+
+@keyframes modal-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.cross-section {
+  position: relative;
+  width: 340px; height: 420px;
+  border-radius: 14px;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  box-shadow: 0 28px 70px rgba(0,0,0,0.7);
+}
+
+.layer { flex: 1; }
+.layer.sponge { background: #c9a96e; }
+.layer.cream  { background: #f7f2ea; flex: 0.52; }
+
+.collage-poster {
+  position: absolute;
+  width: 68px; height: 98px;
+  border-radius: 5px;
+  overflow: hidden;
+  border: 2px solid rgba(255,255,255,0.9);
+  box-shadow: 0 5px 16px rgba(0,0,0,0.5);
+  animation: poster-pop 0.38s cubic-bezier(0.34,1.45,0.64,1) both;
+}
+.collage-poster img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.collage-fallback {
+  width: 100%; height: 100%;
+  background: #555;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem; font-weight: 700; color: #fff;
+}
+
+@keyframes poster-pop {
+  from { transform: scale(0) rotate(-10deg); opacity: 0; }
+  to   { transform: scale(1) rotate(0deg);   opacity: 1; }
+}
+
+.slice-cake-name {
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.6);
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+}
+
+.btn-reset {
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.28);
+  border-radius: 22px;
+  color: rgba(255,255,255,0.8);
+  font-size: 0.8rem;
+  padding: 9px 22px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: background 0.15s, color 0.15s;
+}
+.btn-reset:hover { background: rgba(255,255,255,0.22); color: #fff; }
