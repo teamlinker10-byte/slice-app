@@ -9,12 +9,9 @@ const CARD_W = 204
 const CARD_H = 82
 
 const cakes = [
-  { id: 1, name: '클래식 화이트',   img: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=900&q=80', thumb: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=120&h=120&q=70' },
-  { id: 2, name: '초콜릿 가나슈',   img: 'https://images.unsplash.com/photo-1606890737304-57a1ca8a5b62?auto=format&fit=crop&w=900&q=80', thumb: 'https://images.unsplash.com/photo-1606890737304-57a1ca8a5b62?auto=format&fit=crop&w=120&h=120&q=70' },
-  { id: 3, name: '레몬 시폰',       img: 'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?auto=format&fit=crop&w=900&q=80', thumb: 'https://images.unsplash.com/photo-1464349095431-e9a21285b5f3?auto=format&fit=crop&w=120&h=120&q=70' },
-  { id: 4, name: '딸기 쇼트케이크', img: 'https://images.unsplash.com/photo-1488477181946-f4c5ee2cf9e9?auto=format&fit=crop&w=900&q=80', thumb: 'https://images.unsplash.com/photo-1488477181946-f4c5ee2cf9e9?auto=format&fit=crop&w=120&h=120&q=70' },
-  { id: 5, name: '말차 오페라',     img: 'https://images.unsplash.com/photo-1535141192574-5d4897c12636?auto=format&fit=crop&w=900&q=80', thumb: 'https://images.unsplash.com/photo-1535141192574-5d4897c12636?auto=format&fit=crop&w=120&h=120&q=70' },
-  { id: 6, name: '카라멜 솔트',     img: 'https://images.unsplash.com/photo-1570145820259-b5f397cbf8a9?auto=format&fit=crop&w=900&q=80', thumb: 'https://images.unsplash.com/photo-1570145820259-b5f397cbf8a9?auto=format&fit=crop&w=120&h=120&q=70' },
+  { id: 1, name: '체리 화이트', img: '/ch_h.png',  thumb: '/ch_h.png'  },
+  { id: 2, name: '초콜릿',      img: '/cho_h.png', thumb: '/cho_h.png' },
+  { id: 3, name: '딸기',        img: '/sb_h.png',  thumb: '/sb_h.png'  },
 ]
 
 function findFreePos(existing, cW, cH) {
