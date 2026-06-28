@@ -12,26 +12,32 @@ html, body, #root {
   width: 100%; height: 100vh;
   overflow: hidden;
   user-select: none;
+  background: #f0ece6;
 }
 
 /* ── CAKE BACKGROUND ── */
 .cake-bg-wrap {
   position: absolute;
   inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .cake-bg {
-  width: 100%; height: 100%;
-  object-fit: cover;
-  object-position: center;
+  height: 82vh;
+  width: auto;
+  max-width: 90vw;
+  object-fit: contain;
   display: block;
   transition: opacity 0.5s ease;
+  filter: drop-shadow(0 24px 60px rgba(0,0,0,0.22));
 }
 
 .cake-vignette {
   position: absolute;
   inset: 0;
-  background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.35) 100%);
+  background: radial-gradient(ellipse at center, transparent 50%, rgba(0,0,0,0.18) 100%);
   pointer-events: none;
 }
 
