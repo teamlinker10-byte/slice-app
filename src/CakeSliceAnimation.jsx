@@ -1,10 +1,11 @@
 import { motion, useAnimation } from 'framer-motion'
 import { useEffect, useState } from 'react'
 
-const EASE_IO = [0.42, 0, 0.58, 1]
 const KNIFE_X = 18
 const ARC_Y   = -14
 const CUT_Y   =  44
+// 케이크 표면에서 빠르게 찌르고 하단에서 저항으로 감속하는 중간 지점 (60% 지점)
+const MID_Y   = ARC_Y + (CUT_Y - ARC_Y) * 0.6  // ≈ 20.8vh
 
 // Kitsch sparkle shapes
 function KitschStar({ color, size }) {
@@ -97,8 +98,12 @@ export default function CakeSliceAnimation({ cake, onComplete }) {
 
     setCutting(true)
     await knife.start({
-      y: `${CUT_Y}vh`,
-      transition: { duration: 1.0, ease: EASE_IO },
+      y: [`${ARC_Y}vh`, `${MID_Y}vh`, `${CUT_Y}vh`],
+      transition: {
+        duration: 0.55,
+        times: [0, 0.28, 1],
+        ease: ['easeIn', 'easeOut'],
+      },
     })
     setCutting(false)
 

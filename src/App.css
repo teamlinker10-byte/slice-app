@@ -145,10 +145,23 @@ html, body, #root {
 }
 .cake-mini img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-/* ── ACTION BUTTONS · bottom-right ── */
+/* ── ACTION BUTTONS · bottom-center (선물 + 자르기) ── */
 .ui-actions {
   position: fixed;
-  bottom: 28px; right: 28px;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 100;
+}
+
+/* ── ACTION BUTTONS · bottom-right (영화 추가) ── */
+.ui-actions-right {
+  position: fixed;
+  bottom: 32px;
+  right: 28px;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -195,7 +208,8 @@ html, body, #root {
 /* ── SEARCH PANEL ── */
 .search-panel {
   position: fixed;
-  bottom: 82px; right: 28px;
+  bottom: 86px;
+  right: 28px;
   width: 296px;
   background: rgba(255,255,255,0.96);
   backdrop-filter: blur(18px);
@@ -414,6 +428,13 @@ html, body, #root {
   padding: 13px 26px;
   font-size: 0.92rem;
   box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+}
+
+/* ── SLICE ACTION ROW (creator preview: 처음으로 + 선물하기) ── */
+.slice-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
 /* ── CREATE-YOUR-OWN BUTTON (gift sliced view) ── */

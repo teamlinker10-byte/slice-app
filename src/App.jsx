@@ -9,6 +9,7 @@ const POSTER   = 'https://image.tmdb.org/t/p/w185'
 const CARD_W    = 204
 const CARD_H    = 82
 const MIN_SHARE = 4
+const MAX_MOVIES = 10
 
 const cakes = [
   { id: 1, name: '체리 화이트', img: '/ch_h.png',  thumb: '/ch_h.png',  yOffset: 0 },
@@ -17,17 +18,24 @@ const cakes = [
 ]
 
 function findFreePos(existing, cW, cH) {
-  const gap = 16, margin = 80
+  const gap = 16
+  // Search panel: right=28, width=296 → left edge at cW-324
+  // Card right edge must stay 16px clear → card_x ≤ cW-324-16-CARD_W = cW-544
+  const xMax = Math.max(cW * 0.5, cW - 544)
+  // Mirror right exclusion on left so distribution centers around cake (cW/2)
+  const xMin = Math.max(16, Math.min(cW * 0.22, xMax - CARD_W - gap))
+  const yMin = Math.max(16, cH * 0.08)
+  const yMax = Math.min(cH - CARD_H - 110, cH * 0.86)
   for (let t = 0; t < 400; t++) {
-    const x = margin + Math.random() * (cW - CARD_W - margin * 2)
-    const y = margin + Math.random() * (cH - CARD_H - margin * 2 - 80)
+    const x = xMin + Math.random() * (xMax - xMin)
+    const y = yMin + Math.random() * (yMax - yMin)
     const ok = !existing.some(
       p => x < p.x + p.w + gap && x + CARD_W + gap > p.x && y < p.y + p.h + gap && y + CARD_H + gap > p.y
     )
     if (ok) return { x, y, w: CARD_W, h: CARD_H }
   }
   const i = existing.length
-  return { x: margin + (i % 3) * (CARD_W + gap), y: margin + Math.floor(i / 3) * (CARD_H + gap), w: CARD_W, h: CARD_H }
+  return { x: xMin + (i % 3) * (CARD_W + gap), y: yMin + Math.floor(i / 3) * (CARD_H + gap), w: CARD_W, h: CARD_H }
 }
 
 function genCollagePos(count, cW, cH, pW, pH, gap = 10) {
@@ -72,10 +80,10 @@ function GiftIcon() {
   )
 }
 
-function MovieCard({ movie, onRemove, readOnly }) {
+function MovieCard({ movie, onRemove }) {
   return (
     <div className="movie-card" style={{ left: movie.pos.x, top: movie.pos.y }}>
-      {!readOnly && <button className="card-x" onClick={() => onRemove(movie.id)}>✕</button>}
+      <button className="card-x" onClick={() => onRemove(movie.id)}>✕</button>
       {movie.poster_path
         ? <img className="card-poster" src={`${POSTER}${movie.poster_path}`} alt="" />
         : <div className="card-poster no-poster" />}
@@ -188,9 +196,12 @@ export default function App() {
   }
 
   const addIngredient = useCallback((movie) => {
-    if (ingredients.find(m => m.id === movie.id)) return
-    const el  = canvasRef.current
-    const pos = findFreePos(ingredients.map(m => m.pos), el?.offsetWidth || 900, el?.offsetHeight || 600)
+    if (ingredients.find(m => m.id === movie.id)) {
+      setIngredients(prev => prev.filter(m => m.id !== movie.id))
+      return
+    }
+    if (ingredients.length >= MAX_MOVIES) return
+    const pos = findFreePos(ingredients.map(m => m.pos), window.innerWidth, window.innerHeight)
     setIngredients(prev => [...prev, { ...movie, pos }])
   }, [ingredients])
 
@@ -217,6 +228,11 @@ export default function App() {
     } catch {
       window.prompt('링크를 복사하세요:', url)
     }
+  }
+
+  function backToWhole() {
+    setPhase('whole')
+    setShareCopied(false)
   }
 
   function reset() {
@@ -274,13 +290,8 @@ export default function App() {
       )}
 
       {/* ── FLOATING MOVIE CARDS ── */}
-      {(phase === 'whole' || phase === 'received') && !initLoading && ingredients.map(movie => (
-        <MovieCard
-          key={movie.id}
-          movie={movie}
-          onRemove={removeIngredient}
-          readOnly={phase === 'received'}
-        />
+      {phase === 'whole' && ingredients.map(movie => (
+        <MovieCard key={movie.id} movie={movie} onRemove={removeIngredient} />
       ))}
 
       {/* ── SLICED VIEW ── */}
@@ -307,7 +318,14 @@ export default function App() {
           <p className="slice-cake-name">{cake.name}</p>
           {isGift
             ? <button className="btn-create" onClick={goCreate}>나도 케이크 만들기 →</button>
-            : <button className="btn-reset"  onClick={reset}>← 처음으로</button>
+            : (
+              <div className="slice-actions">
+                <button className="btn-reset" onClick={backToWhole}>← 처음으로</button>
+                <button className="btn-share" onClick={handleShare}>
+                  <GiftIcon /> {shareCopied ? '링크 복사됨 ✓' : '선물하기'}
+                </button>
+              </div>
+            )
           }
         </div>
       )}
@@ -326,21 +344,23 @@ export default function App() {
         </div>
       )}
 
-      {/* ── ACTION BUTTONS: creator ── */}
-      {phase === 'whole' && (
+      {/* ── CENTER BUTTONS: 선물 + 자르기 ── */}
+      {phase === 'whole' && canShare && (
         <div className="ui-actions">
-          {canShare && (
-            <>
-              <button className="btn-share" onClick={handleShare}>
-                <GiftIcon /> {shareCopied ? '링크 복사됨 ✓' : '케이크 선물하기'}
-              </button>
-              <button className="btn-cut" onClick={handleCut}>
-                <KnifeIcon /> 자르기
-              </button>
-            </>
-          )}
+          <button className="btn-share" onClick={handleShare}>
+            <GiftIcon /> {shareCopied ? '링크 복사됨 ✓' : '케이크 선물하기'}
+          </button>
+          <button className="btn-cut" onClick={handleCut}>
+            <KnifeIcon /> 케이크 미리 맛보기
+          </button>
+        </div>
+      )}
+
+      {/* ── RIGHT BUTTON: 영화 추가 ── */}
+      {phase === 'whole' && (
+        <div className="ui-actions-right">
           <button className="btn-add" onClick={() => setSearchOpen(v => !v)}>
-            {searchOpen ? '닫기' : '영화 추가'}
+            {searchOpen ? '닫기' : ingredients.length >= MAX_MOVIES ? `${MAX_MOVIES}개 완성` : '영화 추가'}
           </button>
         </div>
       )}
