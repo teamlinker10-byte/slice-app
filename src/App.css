@@ -298,7 +298,7 @@ html, body, #root {
   transform: translateX(-50%);
   background: linear-gradient(to bottom, rgba(255,255,255,0.95) 0%, rgba(200,175,140,0.5) 100%);
   box-shadow: 0 0 18px rgba(255,255,255,0.7);
-  animation: cut-draw 0.65s ease forwards, cut-fade 0.25s ease 0.7s forwards;
+  animation: cut-draw 0.5s ease 0.45s forwards, cut-fade 0.3s ease 1.0s forwards;
   clip-path: inset(0 0 100% 0);
 }
 
@@ -384,3 +384,69 @@ html, body, #root {
   transition: background 0.15s, color 0.15s;
 }
 .btn-reset:hover { background: rgba(255,255,255,0.22); color: #fff; }
+
+/* ── SHARE BUTTON ── */
+.btn-share {
+  background: #FF6B8A;
+  color: #fff;
+  border: none;
+  border-radius: 24px;
+  padding: 12px 22px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(255, 107, 138, 0.5);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  animation: btn-appear 0.4s cubic-bezier(0.34,1.4,0.64,1) both;
+  white-space: nowrap;
+}
+.btn-share:hover {
+  background: #e84f74;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 26px rgba(255, 107, 138, 0.6);
+}
+
+/* ── RECIPIENT CUT BUTTON ── */
+.received-cut {
+  padding: 13px 26px;
+  font-size: 0.92rem;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+}
+
+/* ── CREATE-YOUR-OWN BUTTON (gift sliced view) ── */
+.btn-create {
+  background: #fff;
+  color: #222;
+  border: none;
+  border-radius: 24px;
+  padding: 13px 28px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 6px 28px rgba(0,0,0,0.32);
+  letter-spacing: 0.1px;
+  transition: transform 0.15s, box-shadow 0.2s;
+}
+.btn-create:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 32px rgba(0,0,0,0.4);
+}
+
+/* ── INIT LOADING ── */
+.init-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+.init-loading-inner {
+  color: rgba(100, 80, 60, 0.7);
+  font-size: 0.95rem;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}

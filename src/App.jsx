@@ -1,17 +1,19 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import './App.css'
+import CakeSliceAnimation from './CakeSliceAnimation'
 
 const API_KEY  = import.meta.env.VITE_TMDB_API_KEY
 const TMDB_URL = 'https://api.themoviedb.org/3'
 const POSTER   = 'https://image.tmdb.org/t/p/w185'
 
-const CARD_W = 204
-const CARD_H = 82
+const CARD_W    = 204
+const CARD_H    = 82
+const MIN_SHARE = 4
 
 const cakes = [
-  { id: 1, name: '체리 화이트', img: '/ch_h.png',  thumb: '/ch_h.png'  },
-  { id: 2, name: '초콜릿',      img: '/cho_h.png', thumb: '/cho_h.png' },
-  { id: 3, name: '딸기',        img: '/sb_h.png',  thumb: '/sb_h.png'  },
+  { id: 1, name: '체리 화이트', img: '/ch_h.png',  thumb: '/ch_h.png',  yOffset: 0 },
+  { id: 2, name: '초콜릿',      img: '/cho_h.png', thumb: '/cho_h.png', yOffset: 0 },
+  { id: 3, name: '딸기',        img: '/sb_h.png',  thumb: '/sb_h.png',  yOffset: 3 },
 ]
 
 function findFreePos(existing, cW, cH) {
@@ -58,10 +60,22 @@ function KnifeIcon() {
   )
 }
 
-function MovieCard({ movie, onRemove }) {
+function GiftIcon() {
+  return (
+    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 12 20 22 4 22 4 12"/>
+      <rect x="2" y="7" width="20" height="5"/>
+      <line x1="12" y1="22" x2="12" y2="7"/>
+      <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
+      <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
+    </svg>
+  )
+}
+
+function MovieCard({ movie, onRemove, readOnly }) {
   return (
     <div className="movie-card" style={{ left: movie.pos.x, top: movie.pos.y }}>
-      <button className="card-x" onClick={() => onRemove(movie.id)}>✕</button>
+      {!readOnly && <button className="card-x" onClick={() => onRemove(movie.id)}>✕</button>}
       {movie.poster_path
         ? <img className="card-poster" src={`${POSTER}${movie.poster_path}`} alt="" />
         : <div className="card-poster no-poster" />}
@@ -74,8 +88,8 @@ function MovieCard({ movie, onRemove }) {
 }
 
 export default function App() {
-  const canvasRef   = useRef(null)
-  const [cake, setCake]           = useState(cakes[0])
+  const canvasRef = useRef(null)
+  const [cake, setCake]               = useState(cakes[0])
   const [ingredients, setIngredients] = useState([])
   const [searchOpen, setSearchOpen]   = useState(false)
   const [query, setQuery]             = useState('')
@@ -84,6 +98,46 @@ export default function App() {
   const [searchError, setSearchError] = useState('')
   const [phase, setPhase]             = useState('whole')
   const [collagePos, setCollagePos]   = useState([])
+  const [isGift, setIsGift]           = useState(false)
+  const [shareCopied, setShareCopied] = useState(false)
+  const [initLoading, setInitLoading] = useState(false)
+
+  // Load shared cake from URL params on mount
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const cakeId   = params.get('cake')
+    const movieIds = params.get('movies')
+    if (!cakeId || !movieIds) return
+
+    const foundCake = cakes.find(c => c.id === parseInt(cakeId))
+    if (!foundCake) return
+
+    setCake(foundCake)
+    setInitLoading(true)
+
+    const ids = movieIds.split(',').filter(Boolean)
+    Promise.all(
+      ids.map(id =>
+        fetch(`${TMDB_URL}/movie/${id}?api_key=${API_KEY}&language=ko-KR`)
+          .then(r => r.json())
+          .catch(() => null)
+      )
+    ).then(movies => {
+      const valid = movies.filter(m => m && m.id)
+      const W = window.innerWidth
+      const H = window.innerHeight
+      const placed = []
+      const withPos = valid.map(m => {
+        const pos = findFreePos(placed, W, H)
+        placed.push(pos)
+        return { ...m, pos }
+      })
+      setIngredients(withPos)
+      setIsGift(true)
+      setPhase('received')
+      setInitLoading(false)
+    })
+  }, [])
 
   async function doSearch(q) {
     const trimmed = q.trim()
@@ -93,7 +147,6 @@ export default function App() {
     try {
       const noSpace = trimmed.replace(/\s+/g, '')
       const variants = new Set([trimmed, noSpace])
-      // 공백 없는 쿼리는 가능한 모든 위치에 공백 삽입해서 추가 검색
       if (!trimmed.includes(' ') && noSpace.length >= 3 && noSpace.length <= 12) {
         for (let i = 1; i < noSpace.length; i++) {
           variants.add(noSpace.slice(0, i) + ' ' + noSpace.slice(i))
@@ -149,33 +202,86 @@ export default function App() {
     const W = 340, H = 420
     setCollagePos(genCollagePos(ingredients.length, W - 16, H - 16, 68, 98))
     setPhase('cutting')
-    setTimeout(() => setPhase('sliced'), 900)
+  }
+
+  async function handleShare() {
+    const params = new URLSearchParams({
+      cake:   cake.id,
+      movies: ingredients.map(m => m.id).join(','),
+    })
+    const url = `${window.location.origin}${window.location.pathname}?${params}`
+    try {
+      await navigator.clipboard.writeText(url)
+      setShareCopied(true)
+      setTimeout(() => setShareCopied(false), 2500)
+    } catch {
+      window.prompt('링크를 복사하세요:', url)
+    }
   }
 
   function reset() {
-    setPhase('whole'); setIngredients([]); setQuery(''); setResults([])
+    window.history.replaceState({}, '', window.location.pathname)
+    setPhase('whole')
+    setIngredients([])
+    setQuery('')
+    setResults([])
+    setIsGift(false)
+    setShareCopied(false)
+  }
+
+  function goCreate() {
+    window.history.replaceState({}, '', window.location.pathname)
+    setCake(cakes[0])
+    setPhase('whole')
+    setIngredients([])
+    setQuery('')
+    setResults([])
+    setIsGift(false)
+    setShareCopied(false)
   }
 
   function changeCake(c) {
-    setCake(c); reset()
+    setCake(c)
+    reset()
   }
+
+  const canShare = ingredients.length >= MIN_SHARE
 
   return (
     <div className="canvas" ref={canvasRef}>
 
+      {/* Loading shared cake */}
+      {initLoading && (
+        <div className="init-loading">
+          <div className="init-loading-inner">
+            <p>케이크 불러오는 중...</p>
+          </div>
+        </div>
+      )}
+
       {/* ── CAKE BACKGROUND ── */}
-      <div className="cake-bg-wrap">
-        <img key={cake.id} className="cake-bg" src={cake.img} alt="" />
-        <div className="cake-vignette" />
-      </div>
+      {phase !== 'cutting' && !initLoading && (
+        <div className="cake-bg-wrap">
+          <img key={cake.id} className="cake-bg" src={cake.img} alt=""
+               style={cake.yOffset ? { transform: `translateY(${cake.yOffset}vh)` } : undefined} />
+          <div className="cake-vignette" />
+        </div>
+      )}
+
+      {/* ── CAKE SLICE ANIMATION ── */}
+      {phase === 'cutting' && (
+        <CakeSliceAnimation cake={cake} onComplete={() => setPhase('sliced')} />
+      )}
 
       {/* ── FLOATING MOVIE CARDS ── */}
-      {phase !== 'sliced' && ingredients.map(movie => (
-        <MovieCard key={movie.id} movie={movie} onRemove={phase === 'whole' ? removeIngredient : () => {}} />
+      {(phase === 'whole' || phase === 'received') && !initLoading && ingredients.map(movie => (
+        <MovieCard
+          key={movie.id}
+          movie={movie}
+          onRemove={removeIngredient}
+          readOnly={phase === 'received'}
+        />
       ))}
-
-      {/* ── CUTTING LINE ── */}
-      {phase === 'cutting' && <div className="cut-line" />}
 
       {/* ── SLICED VIEW ── */}
       {phase === 'sliced' && (
@@ -199,32 +305,51 @@ export default function App() {
             })}
           </div>
           <p className="slice-cake-name">{cake.name}</p>
-          <button className="btn-reset" onClick={reset}>← 처음으로</button>
+          {isGift
+            ? <button className="btn-create" onClick={goCreate}>나도 케이크 만들기 →</button>
+            : <button className="btn-reset"  onClick={reset}>← 처음으로</button>
+          }
         </div>
       )}
 
       {/* ── LOGO ── */}
       <p className="ui-logo">Slice</p>
 
-      {/* ── CAKE SELECTOR · bottom-left ── */}
-      <div className="ui-cake-selector">
-        {cakes.map(c => (
-          <div key={c.id} className={`cake-mini ${cake.id === c.id ? 'active' : ''}`} onClick={() => changeCake(c)}>
-            <img src={c.thumb} alt={c.name} />
-          </div>
-        ))}
-      </div>
+      {/* ── CAKE SELECTOR · bottom-left (creator only) ── */}
+      {phase === 'whole' && (
+        <div className="ui-cake-selector">
+          {cakes.map(c => (
+            <div key={c.id} className={`cake-mini ${cake.id === c.id ? 'active' : ''}`} onClick={() => changeCake(c)}>
+              <img src={c.thumb} alt={c.name} />
+            </div>
+          ))}
+        </div>
+      )}
 
-      {/* ── ACTION BUTTONS · bottom-right ── */}
+      {/* ── ACTION BUTTONS: creator ── */}
       {phase === 'whole' && (
         <div className="ui-actions">
-          {ingredients.length >= 4 && (
-            <button className="btn-cut" onClick={handleCut}>
-              <KnifeIcon /> 케이크 자르기
-            </button>
+          {canShare && (
+            <>
+              <button className="btn-share" onClick={handleShare}>
+                <GiftIcon /> {shareCopied ? '링크 복사됨 ✓' : '케이크 선물하기'}
+              </button>
+              <button className="btn-cut" onClick={handleCut}>
+                <KnifeIcon /> 자르기
+              </button>
+            </>
           )}
           <button className="btn-add" onClick={() => setSearchOpen(v => !v)}>
             {searchOpen ? '닫기' : '영화 추가'}
+          </button>
+        </div>
+      )}
+
+      {/* ── ACTION BUTTONS: recipient ── */}
+      {phase === 'received' && !initLoading && (
+        <div className="ui-actions">
+          <button className="btn-cut received-cut" onClick={handleCut}>
+            <KnifeIcon /> 케이크 자르기
           </button>
         </div>
       )}
