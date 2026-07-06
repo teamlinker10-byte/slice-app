@@ -326,44 +326,13 @@ html, body, #root {
 }
 
 /* ── SLICED VIEW ── */
-.slice-modal {
-  position: absolute;
-  inset: 0;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  gap: 18px;
-  background: rgba(0,0,0,0.52);
-  backdrop-filter: blur(5px);
-  z-index: 50;
-  animation: modal-in 0.45s ease both;
-}
-
-@keyframes modal-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-.cross-section {
-  position: relative;
-  width: 340px; height: 420px;
-  border-radius: 14px;
-  overflow: hidden;
-  display: flex; flex-direction: column;
-  box-shadow: 0 28px 70px rgba(0,0,0,0.7);
-}
-
-.layer { flex: 1; }
-.layer.sponge { background: #c9a96e; }
-.layer.cream  { background: #f7f2ea; flex: 0.52; }
-
 .collage-poster {
-  position: absolute;
-  width: 68px; height: 98px;
   border-radius: 5px;
   overflow: hidden;
   border: 2px solid rgba(255,255,255,0.9);
   box-shadow: 0 5px 16px rgba(0,0,0,0.5);
   animation: poster-pop 0.38s cubic-bezier(0.34,1.45,0.64,1) both;
+  z-index: 60;
 }
 .collage-poster img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
@@ -377,13 +346,6 @@ html, body, #root {
 @keyframes poster-pop {
   from { transform: scale(0) rotate(-10deg); opacity: 0; }
   to   { transform: scale(1) rotate(0deg);   opacity: 1; }
-}
-
-.slice-cake-name {
-  font-size: 0.72rem;
-  color: rgba(255,255,255,0.6);
-  letter-spacing: 2.5px;
-  text-transform: uppercase;
 }
 
 .btn-reset {

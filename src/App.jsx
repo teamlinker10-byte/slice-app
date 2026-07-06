@@ -11,10 +11,15 @@ const CARD_H    = 82
 const MIN_SHARE = 4
 const MAX_MOVIES = 10
 
+// zone: fraction box (of the slice image's natural size) covering the
+// cross-section where the cake layers are visible — posters must stay inside it.
 const cakes = [
-  { id: 1, name: '체리 화이트', img: '/ch_h.png',  thumb: '/ch_h.png',  yOffset: 0 },
-  { id: 2, name: '초콜릿',      img: '/cho_h.png', thumb: '/cho_h.png', yOffset: 0 },
-  { id: 3, name: '딸기',        img: '/sb_h.png',  thumb: '/sb_h.png',  yOffset: 3 },
+  { id: 1, name: '체리 화이트', img: '/ch_h.png',  thumb: '/ch_h.png',  slice: '/ch_p.png',  yOffset: 0,
+    naturalW: 1314, naturalH: 1197, zone: { x0: 0.26, y0: 0.35, x1: 0.72, y1: 0.83 } },
+  { id: 2, name: '초콜릿',      img: '/cho_h.png', thumb: '/cho_h.png', slice: '/cho_p.png', yOffset: 0,
+    naturalW: 1130, naturalH: 917, zone: { x0: 0.263, y0: 0.350, x1: 0.750, y1: 0.721 } },
+  { id: 3, name: '딸기',        img: '/sb_h.png',  thumb: '/sb_h.png',  slice: '/sb_p.png',  yOffset: 3,
+    naturalW: 1402, naturalH: 1122, zone: { x0: 0.29, y0: 0.38, x1: 0.71, y1: 0.70 } },
 ]
 
 function findFreePos(existing, cW, cH) {
@@ -38,22 +43,55 @@ function findFreePos(existing, cW, cH) {
   return { x: xMin + (i % 3) * (CARD_W + gap), y: yMin + Math.floor(i / 3) * (CARD_H + gap), w: CARD_W, h: CARD_H }
 }
 
-function genCollagePos(count, cW, cH, pW, pH, gap = 10) {
+function genCollagePos(count, cake) {
+  const gap = 14
+  const vw = window.innerWidth, vh = window.innerHeight
+
+  // Mirror the .cake-bg CSS sizing (height: 82vh, width: auto, max-width: 90vw,
+  // centered) to find where the slice image actually renders on screen.
+  let imgH = 0.82 * vh
+  let imgW = imgH * (cake.naturalW / cake.naturalH)
+  if (imgW > 0.90 * vw) {
+    imgW = 0.90 * vw
+    imgH = imgW * (cake.naturalH / cake.naturalW)
+  }
+  const imgLeft = (vw - imgW) / 2
+  const imgTop  = (vh - imgH) / 2
+
+  // Target the cake's bread layer zone (cross-section interior) in screen coords
+  const { x0, y0, x1, y1 } = cake.zone
+  const zoneX = imgLeft + x0 * imgW
+  const zoneY = imgTop + y0 * imgH
+  const zoneW = (x1 - x0) * imgW
+  const zoneH = (y1 - y0) * imgH
+
+  // Shrink poster size so a count-sized grid always fits inside the zone —
+  // otherwise a shallow zone (e.g. the choco cake) overflows past its edges.
+  const cols = Math.max(1, Math.ceil(Math.sqrt(count)))
+  const rows = Math.max(1, Math.ceil(count / cols))
+  const scale = Math.min(
+    1,
+    (zoneW - (cols - 1) * gap) / (cols * 68),
+    (zoneH - (rows - 1) * gap) / (rows * 98),
+  )
+  const pW = 68 * Math.max(scale, 0.4)
+  const pH = 98 * Math.max(scale, 0.4)
+
+  // Assign each poster its own grid cell, then jitter within the cell —
+  // guarantees zero overlap while still looking scattered (random free-placement
+  // with a grid fallback could overlap, since the fallback ignored earlier
+  // randomly-placed posters).
+  const cellW = zoneW / cols
+  const cellH = zoneH / rows
   const placed = []
   for (let i = 0; i < count; i++) {
-    let pos = null
-    for (let t = 0; t < 300; t++) {
-      const x = gap + Math.random() * (cW - pW - gap * 2)
-      const y = gap + Math.random() * (cH - pH - gap * 2)
-      if (!placed.some(p => x < p.x + p.w + gap && x + pW + gap > p.x && y < p.y + p.h + gap && y + pH + gap > p.y)) {
-        pos = { x, y, w: pW, h: pH }; break
-      }
-    }
-    if (!pos) {
-      const cols = Math.ceil(Math.sqrt(count))
-      pos = { x: (i % cols) * (pW + gap) + gap, y: Math.floor(i / cols) * (pH + gap) + gap, w: pW, h: pH }
-    }
-    placed.push(pos)
+    const col = i % cols
+    const row = Math.floor(i / cols)
+    const slackX = Math.max(0, cellW - pW - gap)
+    const slackY = Math.max(0, cellH - pH - gap)
+    const x = zoneX + col * cellW + gap / 2 + Math.random() * slackX
+    const y = zoneY + row * cellH + gap / 2 + Math.random() * slackY
+    placed.push({ x, y, w: pW, h: pH })
   }
   return placed
 }
@@ -210,8 +248,7 @@ export default function App() {
   }
 
   function handleCut() {
-    const W = 340, H = 420
-    setCollagePos(genCollagePos(ingredients.length, W - 16, H - 16, 68, 98))
+    setCollagePos(genCollagePos(ingredients.length, cake))
     setPhase('cutting')
   }
 
@@ -278,8 +315,9 @@ export default function App() {
       {/* ── CAKE BACKGROUND ── */}
       {phase !== 'cutting' && !initLoading && (
         <div className="cake-bg-wrap">
-          <img key={cake.id} className="cake-bg" src={cake.img} alt=""
-               style={cake.yOffset ? { transform: `translateY(${cake.yOffset}vh)` } : undefined} />
+          <img key={`${cake.id}-${phase}`} className="cake-bg"
+               src={phase === 'sliced' ? cake.slice : cake.img} alt=""
+               style={cake.yOffset && phase !== 'sliced' ? { transform: `translateY(${cake.yOffset}vh)` } : undefined} />
           <div className="cake-vignette" />
         </div>
       )}
@@ -294,40 +332,35 @@ export default function App() {
         <MovieCard key={movie.id} movie={movie} onRemove={removeIngredient} />
       ))}
 
-      {/* ── SLICED VIEW ── */}
+      {/* ── SLICED VIEW: posters scattered as toppings on the slice cake ── */}
       {phase === 'sliced' && (
-        <div className="slice-modal">
-          <div className="cross-section">
-            <div className="layer sponge" />
-            <div className="layer cream" />
-            <div className="layer sponge" />
-            <div className="layer cream" />
-            <div className="layer sponge" />
-            {ingredients.map((movie, i) => {
-              const p = collagePos[i]
-              if (!p) return null
-              return (
-                <div key={movie.id} className="collage-poster" style={{ left: p.x, top: p.y, animationDelay: `${i * 75}ms` }}>
-                  {movie.poster_path
-                    ? <img src={`${POSTER}${movie.poster_path}`} alt={movie.title} />
-                    : <div className="collage-fallback">{movie.title[0]}</div>}
-                </div>
-              )
-            })}
-          </div>
-          <p className="slice-cake-name">{cake.name}</p>
-          {isGift
-            ? <button className="btn-create" onClick={goCreate}>나도 케이크 만들기 →</button>
-            : (
-              <div className="slice-actions">
-                <button className="btn-reset" onClick={backToWhole}>← 처음으로</button>
-                <button className="btn-share" onClick={handleShare}>
-                  <GiftIcon /> {shareCopied ? '링크 복사됨 ✓' : '선물하기'}
-                </button>
+        <>
+          {ingredients.map((movie, i) => {
+            const p = collagePos[i]
+            if (!p) return null
+            return (
+              <div key={movie.id} className="collage-poster"
+                   style={{ position: 'fixed', left: p.x, top: p.y, width: p.w, height: p.h, animationDelay: `${i * 75}ms` }}>
+                {movie.poster_path
+                  ? <img src={`${POSTER}${movie.poster_path}`} alt={movie.title} />
+                  : <div className="collage-fallback">{movie.title[0]}</div>}
               </div>
             )
-          }
-        </div>
+          })}
+          <div className="ui-actions">
+            {isGift
+              ? <button className="btn-create" onClick={goCreate}>나도 케이크 만들기 →</button>
+              : (
+                <div className="slice-actions">
+                  <button className="btn-reset" onClick={backToWhole}>← 처음으로</button>
+                  <button className="btn-share" onClick={handleShare}>
+                    <GiftIcon /> {shareCopied ? '링크 복사됨 ✓' : '선물하기'}
+                  </button>
+                </div>
+              )
+            }
+          </div>
+        </>
       )}
 
       {/* ── LOGO ── */}
