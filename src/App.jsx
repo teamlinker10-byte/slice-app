@@ -147,12 +147,15 @@ export default function App() {
   const [isGift, setIsGift]           = useState(false)
   const [shareCopied, setShareCopied] = useState(false)
   const [initLoading, setInitLoading] = useState(false)
+  const [makerName, setMakerName]     = useState('')
+  const [editingName, setEditingName] = useState(false)
 
   // Load shared cake from URL params on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const cakeId   = params.get('cake')
     const movieIds = params.get('movies')
+    setMakerName(params.get('name') || '')
     if (!cakeId || !movieIds) return
 
     const foundCake = cakes.find(c => c.id === parseInt(cakeId))
@@ -256,6 +259,7 @@ export default function App() {
     const params = new URLSearchParams({
       cake:   cake.id,
       movies: ingredients.map(m => m.id).join(','),
+      ...(makerName.trim() ? { name: makerName.trim() } : {}),
     })
     const url = `${window.location.origin}${window.location.pathname}?${params}`
     try {
@@ -280,6 +284,8 @@ export default function App() {
     setResults([])
     setIsGift(false)
     setShareCopied(false)
+    setMakerName('')
+    setEditingName(false)
   }
 
   function goCreate() {
@@ -291,6 +297,8 @@ export default function App() {
     setResults([])
     setIsGift(false)
     setShareCopied(false)
+    setMakerName('')
+    setEditingName(false)
   }
 
   function changeCake(c) {
@@ -319,6 +327,31 @@ export default function App() {
                src={phase === 'sliced' ? cake.slice : cake.img} alt=""
                style={cake.yOffset && phase !== 'sliced' ? { transform: `translateY(${cake.yOffset}vh)` } : undefined} />
           <div className="cake-vignette" />
+        </div>
+      )}
+
+      {/* ── CAKE NAME TAG: who made it, so a gift recipient can tell ── */}
+      {phase !== 'cutting' && !initLoading && (isGift ? makerName : true) && (
+        <div className="cake-name-tag">
+          <span className="cake-name-label">Made by</span>
+          {isGift ? (
+            <span className="cake-name-value">{makerName}</span>
+          ) : editingName ? (
+            <input
+              className="cake-name-input"
+              value={makerName}
+              onChange={e => setMakerName(e.target.value)}
+              onBlur={() => setEditingName(false)}
+              onKeyDown={e => { if (e.key === 'Enter') e.currentTarget.blur() }}
+              placeholder="이름을 입력하세요"
+              maxLength={20}
+              autoFocus
+            />
+          ) : (
+            <button className="cake-name-value cake-name-edit" onClick={() => setEditingName(true)}>
+              {makerName || '이름을 입력하세요'}
+            </button>
+          )}
         </div>
       )}
 
@@ -364,7 +397,9 @@ export default function App() {
       )}
 
       {/* ── LOGO ── */}
-      <p className="ui-logo">Slice</p>
+      <button className="ui-logo" onClick={goCreate}>
+        <img src="/logo.png" alt="Slice" />
+      </button>
 
       {/* ── CAKE SELECTOR · bottom-left (creator only) ── */}
       {phase === 'whole' && (
