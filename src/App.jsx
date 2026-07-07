@@ -142,7 +142,7 @@ export default function App() {
   const [results, setResults]         = useState([])
   const [loading, setLoading]         = useState(false)
   const [searchError, setSearchError] = useState('')
-  const [phase, setPhase]             = useState('whole')
+  const [phase, setPhase]             = useState('landing')
   const [collagePos, setCollagePos]   = useState([])
   const [isGift, setIsGift]           = useState(false)
   const [shareCopied, setShareCopied] = useState(false)
@@ -330,8 +330,16 @@ export default function App() {
         </div>
       )}
 
+      {/* ── HERO: first-screen intro ── */}
+      {phase === 'landing' && !initLoading && (
+        <div className="hero-overlay">
+          <h1 className="hero-title">좋아하는 영화를<br />케이크에 숨겨 선물하세요.</h1>
+          <button className="hero-cta" onClick={() => setPhase('whole')}>케이크 만들기</button>
+        </div>
+      )}
+
       {/* ── CAKE NAME TAG: who made it, so a gift recipient can tell ── */}
-      {phase !== 'cutting' && !initLoading && (isGift ? makerName : true) && (
+      {phase !== 'cutting' && phase !== 'landing' && !initLoading && (isGift ? makerName : true) && (
         <div className="cake-name-tag">
           <span className="cake-name-label">Made by</span>
           {isGift ? (
