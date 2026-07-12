@@ -1,5 +1,18 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+:root {
+  --radius: 16px;
+  --btn-h: 44px;
+  --shadow: 0 4px 16px rgba(0,0,0,0.12);
+  --accent: #F76D9A;
+  --accent-hover: #D25D83;
+  --sp-1: 8px;
+  --sp-2: 16px;
+  --sp-3: 24px;
+  --sp-4: 32px;
+  --sp-5: 40px;
+}
+
 html, body, #root {
   width: 100%; height: 100vh;
   overflow: hidden;
@@ -19,6 +32,17 @@ html, body, #root {
 .cake-bg-wrap {
   position: absolute;
   inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Stacks the sliced image directly over the whole-cake image during the
+   cutting animation's crossfade — see CakeSliceAnimation.jsx. */
+.cake-bg-wrap-overlay {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -31,7 +55,7 @@ html, body, #root {
   object-fit: contain;
   display: block;
   transition: opacity 0.5s ease;
-  filter: drop-shadow(0 24px 60px rgba(0,0,0,0.22));
+  filter: drop-shadow(0 16px 40px rgba(0,0,0,0.16));
 }
 
 .cake-vignette {
@@ -41,68 +65,81 @@ html, body, #root {
   pointer-events: none;
 }
 
-/* ── HERO: first-screen intro ── */
-.hero-overlay {
+/* ── INTRO POPUP: lightweight how-to card over the builder screen ── */
+@keyframes intro-pop-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.intro-popup-backdrop {
   position: fixed;
   inset: 0;
+  z-index: 40;
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 32px;
-  z-index: 150;
+}
+
+.intro-popup {
+  position: relative;
+  width: 320px;
+  background: rgba(235,232,227,0.92);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-radius: var(--radius);
+  padding: var(--sp-4) var(--sp-3);
+  box-shadow: var(--shadow);
   text-align: center;
-  padding: 24px;
-  background: radial-gradient(ellipse at center, rgba(0,0,0,0.12) 0%, rgba(0,0,0,0.5) 100%);
-  animation: hero-fade 0.4s ease both;
+  animation: intro-pop-in 0.35s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
-@keyframes hero-fade {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-.hero-title {
-  margin: 0;
-  font-size: 2.1rem;
-  font-weight: 800;
-  line-height: 1.45;
-  letter-spacing: -0.5px;
-  color: #fff;
-  text-shadow: 0 4px 24px rgba(0,0,0,0.55);
-  max-width: 90vw;
-}
-
-.hero-cta {
-  background: #e8453c;
-  color: #fff;
+.intro-popup-x {
+  position: absolute;
+  top: var(--sp-2); right: var(--sp-2);
+  width: 22px; height: 22px;
+  border-radius: 50%;
   border: none;
-  border-radius: 28px;
-  padding: 16px 38px;
-  font-size: 1rem;
-  font-weight: 700;
+  background: rgba(0,0,0,0.06);
+  color: #6b6358;
+  font-size: 10px;
   cursor: pointer;
-  box-shadow: 0 8px 28px rgba(0,0,0,0.4);
-  transition: background 0.2s, transform 0.15s;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s, color 0.15s;
 }
-.hero-cta:hover {
-  background: #c93a32;
-  transform: translateY(-2px);
+.intro-popup-x:hover {
+  background: rgba(0,0,0,0.12);
+  color: #2a1f1a;
+}
+
+.intro-popup-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.5;
+  color: #2a1f1a;
+  margin: 0 0 var(--sp-2);
+}
+
+.intro-popup-body {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: #7a7266;
+  margin: 0;
 }
 
 /* ── FLOATING MOVIE CARDS ── */
 .movie-card {
   position: absolute;
+  z-index: 30;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--sp-1);
   width: 204px;
   background: rgba(255, 255, 255, 0.93);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border-radius: 13px;
-  padding: 8px 10px 8px 8px;
-  box-shadow: 0 6px 24px rgba(0,0,0,0.28);
+  border-radius: var(--radius);
+  padding: var(--sp-1);
+  box-shadow: var(--shadow);
   animation: card-pop 0.38s cubic-bezier(0.34, 1.56, 0.64, 1) both;
   cursor: default;
 }
@@ -114,12 +151,12 @@ html, body, #root {
 
 .card-x {
   position: absolute;
-  top: -9px; right: -9px;
+  top: -8px; right: -8px;
   width: 22px; height: 22px;
   border-radius: 50%;
   border: none;
   background: #fff;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.22);
+  box-shadow: var(--shadow);
   color: #888;
   font-size: 9px;
   cursor: pointer;
@@ -131,7 +168,7 @@ html, body, #root {
 
 .card-poster {
   width: 40px; height: 58px;
-  border-radius: 5px;
+  border-radius: var(--radius);
   object-fit: cover;
   flex-shrink: 0;
 }
@@ -159,7 +196,7 @@ html, body, #root {
 /* ── LOGO ── */
 .ui-logo {
   position: fixed;
-  top: 28px; left: 32px;
+  top: var(--sp-4); left: var(--sp-4);
   background: none;
   border: none;
   padding: 0;
@@ -170,18 +207,15 @@ html, body, #root {
   display: block;
   height: 40px;
   width: auto;
-  filter: drop-shadow(0 2px 10px rgba(0,0,0,0.35));
+  filter: drop-shadow(0 1px 6px rgba(0,0,0,0.25));
 }
 
 /* ── CAKE NAME TAG ── */
 .cake-name-tag {
   position: fixed;
-  top: 34px;
+  top: var(--sp-4);
   left: 50%;
   transform: translateX(-50%);
-  display: flex;
-  align-items: center;
-  gap: 6px;
   z-index: 100;
   max-width: 70vw;
 }
@@ -190,16 +224,14 @@ html, body, #root {
   font-size: 0.7rem;
   font-weight: 600;
   letter-spacing: 0.5px;
-  color: rgba(255,255,255,0.65);
-  text-shadow: 0 2px 10px rgba(0,0,0,0.4);
+  color: rgba(42,31,26,0.55);
   white-space: nowrap;
 }
 
 .cake-name-value {
   font-size: 0.88rem;
   font-weight: 700;
-  color: #fff;
-  text-shadow: 0 2px 10px rgba(0,0,0,0.4);
+  color: #2a1f1a;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -208,40 +240,43 @@ html, body, #root {
 .cake-name-edit {
   background: none;
   border: none;
-  padding: 2px 4px;
+  padding: 4px var(--sp-1);
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: var(--radius);
   transition: background 0.15s;
 }
 .cake-name-edit:hover {
-  background: rgba(255,255,255,0.16);
+  background: rgba(0,0,0,0.06);
 }
 
 .cake-name-input {
   font-size: 0.88rem;
   font-weight: 700;
-  color: #222;
-  background: rgba(255,255,255,0.95);
+  color: #2a1f1a;
+  background: transparent;
   border: none;
-  border-radius: 6px;
-  padding: 3px 8px;
+  border-bottom: 1.5px solid rgba(42,31,26,0.35);
+  padding: 4px 2px;
   outline: none;
   width: 140px;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+  text-align: center;
+}
+.cake-name-input::placeholder {
+  color: rgba(42,31,26,0.4);
 }
 
 /* ── CAKE SELECTOR · bottom-left ── */
 .ui-cake-selector {
   position: fixed;
-  bottom: 28px; left: 28px;
+  bottom: var(--sp-4); left: var(--sp-4);
   display: grid;
-  grid-template-columns: repeat(3, 42px);
-  gap: 8px;
+  grid-template-columns: repeat(3, 40px);
+  gap: var(--sp-1);
   z-index: 100;
 }
 
 .cake-mini {
-  width: 42px; height: 42px;
+  width: 40px; height: 40px;
   border-radius: 50%;
   overflow: hidden;
   cursor: pointer;
@@ -258,54 +293,62 @@ html, body, #root {
 /* ── ACTION BUTTONS · bottom-center (선물 + 자르기) ── */
 .ui-actions {
   position: fixed;
-  bottom: 32px;
+  bottom: var(--sp-4);
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--sp-1);
   z-index: 100;
 }
 
 /* ── ACTION BUTTONS · bottom-right (영화 추가) ── */
 .ui-actions-right {
   position: fixed;
-  bottom: 32px;
-  right: 28px;
+  bottom: var(--sp-4);
+  right: var(--sp-4);
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--sp-1);
   z-index: 100;
 }
 
-.btn-add {
-  background: #e8453c;
-  color: #fff;
-  border: none;
-  border-radius: 24px;
-  padding: 12px 24px;
-  font-size: 0.88rem;
+/* ── Shared pill-button base: every action button in the app uses the
+   same height, radius, and shadow — only color/border vary. ── */
+.btn-add,
+.btn-cut,
+.btn-share,
+.btn-reset,
+.btn-create {
+  height: var(--btn-h);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-1);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  font-size: 0.92rem;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 4px 18px rgba(0,0,0,0.3);
-  transition: background 0.2s, transform 0.15s;
+  white-space: nowrap;
+  transition: background 0.2s, transform 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.btn-add {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 0 var(--sp-3);
   letter-spacing: 0.2px;
 }
-.btn-add:hover { background: #c93a32; transform: translateY(-2px); }
+.btn-add:hover { background: var(--accent-hover); transform: translateY(-2px); }
 
 .btn-cut {
   background: rgba(255,255,255,0.88);
   backdrop-filter: blur(10px);
   color: #222;
   border: none;
-  border-radius: 24px;
-  padding: 11px 20px;
-  font-size: 0.86rem;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 4px 18px rgba(0,0,0,0.22);
-  display: flex; align-items: center; gap: 8px;
-  transition: background 0.2s, transform 0.15s;
+  padding: 0 var(--sp-3);
   animation: btn-appear 0.4s cubic-bezier(0.34,1.4,0.64,1) both;
 }
 .btn-cut:hover { background: #fff; transform: translateY(-2px); }
@@ -318,19 +361,19 @@ html, body, #root {
 /* ── SEARCH PANEL ── */
 .search-panel {
   position: fixed;
-  bottom: 86px;
-  right: 28px;
+  bottom: 84px;
+  right: var(--sp-4);
   width: 296px;
   background: rgba(255,255,255,0.96);
   backdrop-filter: blur(18px);
   -webkit-backdrop-filter: blur(18px);
-  border-radius: 18px;
-  padding: 14px;
-  box-shadow: 0 10px 36px rgba(0,0,0,0.28);
+  border-radius: var(--radius);
+  padding: var(--sp-2);
+  box-shadow: var(--shadow);
   z-index: 200;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--sp-1);
   max-height: 66vh;
   animation: panel-up 0.28s cubic-bezier(0.34,1.4,0.64,1) both;
 }
@@ -340,13 +383,14 @@ html, body, #root {
   to   { opacity: 1; transform: translateY(0)    scale(1);    }
 }
 
-.sp-form { display: flex; gap: 7px; }
+.sp-form { display: flex; gap: var(--sp-1); }
 
 .sp-input {
   flex: 1;
+  height: var(--btn-h);
   border: 1.5px solid #e0e0e0;
-  border-radius: 9px;
-  padding: 9px 12px;
+  border-radius: var(--radius);
+  padding: 0 var(--sp-2);
   font-size: 0.83rem;
   color: #111;
   outline: none;
@@ -356,11 +400,12 @@ html, body, #root {
 .sp-input:focus { border-color: #bbb; }
 
 .sp-btn {
+  height: var(--btn-h);
   background: #111;
   color: #fff;
   border: none;
-  border-radius: 9px;
-  padding: 9px 14px;
+  border-radius: var(--radius);
+  padding: 0 var(--sp-2);
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
@@ -376,15 +421,15 @@ html, body, #root {
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--sp-1);
   scrollbar-width: thin;
   scrollbar-color: #ddd transparent;
 }
 
 .sp-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 7px 8px;
-  border-radius: 10px;
+  display: flex; align-items: center; gap: var(--sp-1);
+  padding: var(--sp-1);
+  border-radius: var(--radius);
   cursor: pointer;
   transition: background 0.12s;
 }
@@ -393,7 +438,7 @@ html, body, #root {
 
 .sp-thumb {
   width: 30px; height: 44px;
-  border-radius: 4px;
+  border-radius: 6px;
   object-fit: cover;
   flex-shrink: 0;
 }
@@ -417,12 +462,13 @@ html, body, #root {
 /* ── CUTTING ANIMATION ── */
 .cut-line {
   position: absolute;
+  z-index: 25;
   top: 0; left: 50%;
-  width: 2px; height: 100%;
+  width: 3px; height: 100%;
   transform: translateX(-50%);
-  background: linear-gradient(to bottom, rgba(255,255,255,0.95) 0%, rgba(200,175,140,0.5) 100%);
-  box-shadow: 0 0 18px rgba(255,255,255,0.7);
-  animation: cut-draw 0.5s ease 0.45s forwards, cut-fade 0.3s ease 1.0s forwards;
+  background: linear-gradient(to bottom, #fff 0%, #e8c073 50%, #fff 100%);
+  box-shadow: 0 0 14px rgba(0,0,0,0.4), 0 0 6px rgba(255,255,255,0.9);
+  animation: cut-draw 0.28s ease forwards, cut-fade 0.35s ease 0.3s forwards;
   clip-path: inset(0 0 100% 0);
 }
 
@@ -435,22 +481,89 @@ html, body, #root {
   to   { opacity: 0; }
 }
 
-/* ── SLICED VIEW ── */
+.cake-cut-hint {
+  position: fixed;
+  bottom: 92px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 90;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: rgba(42,31,26,0.75);
+  background: rgba(255,255,255,0.7);
+  backdrop-filter: blur(4px);
+  padding: 8px var(--sp-2);
+  border-radius: var(--radius);
+  pointer-events: none;
+  white-space: nowrap;
+  animation: hint-fade 4.5s ease both;
+}
+
+@keyframes hint-fade {
+  0%   { opacity: 0; transform: translateX(-50%) translateY(6px); }
+  10%  { opacity: 1; transform: translateX(-50%) translateY(0); }
+  85%  { opacity: 1; transform: translateX(-50%) translateY(0); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(0); }
+}
+
+/* ── SLICED VIEW ──
+   collage-poster-inner stays on a small dedicated radius (not --radius):
+   its scaled size can dip to ~27px on crowded cakes, where 16px would
+   round it into a blob. The hover scale/title live one level below
+   .collage-poster so the title tooltip isn't clipped by overflow:hidden,
+   and .collage-poster itself is the animation + hover-zone anchor. */
 .collage-poster {
+  animation: poster-pop 0.38s cubic-bezier(0.34,1.45,0.64,1) both;
+  z-index: 60;
+  cursor: default;
+}
+.collage-poster:hover {
+  z-index: 70;
+}
+
+.collage-poster-inner {
+  width: 100%;
+  height: 100%;
   border-radius: 5px;
   overflow: hidden;
   border: 2px solid rgba(255,255,255,0.9);
-  box-shadow: 0 5px 16px rgba(0,0,0,0.5);
-  animation: poster-pop 0.38s cubic-bezier(0.34,1.45,0.64,1) both;
-  z-index: 60;
+  box-shadow: var(--shadow);
+  transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-.collage-poster img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.collage-poster:hover .collage-poster-inner {
+  transform: scale(1.2);
+}
+
+.collage-poster-inner img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 .collage-fallback {
   width: 100%; height: 100%;
   background: #555;
   display: flex; align-items: center; justify-content: center;
   font-size: 1.4rem; font-weight: 700; color: #fff;
+}
+
+.collage-poster-title {
+  position: absolute;
+  left: 50%;
+  bottom: -6px;
+  transform: translate(-50%, 100%);
+  white-space: nowrap;
+  max-width: 50vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #fff;
+  background: rgba(0,0,0,0.75);
+  padding: 4px 10px;
+  border-radius: 8px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+.collage-poster:hover .collage-poster-title {
+  opacity: 1;
 }
 
 @keyframes poster-pop {
@@ -461,51 +574,29 @@ html, body, #root {
 .btn-reset {
   background: rgba(255,255,255,0.12);
   border: 1px solid rgba(255,255,255,0.28);
-  border-radius: 22px;
   color: rgba(255,255,255,0.8);
-  font-size: 0.8rem;
-  padding: 9px 22px;
-  cursor: pointer;
+  padding: 0 var(--sp-3);
   backdrop-filter: blur(8px);
-  transition: background 0.15s, color 0.15s;
 }
 .btn-reset:hover { background: rgba(255,255,255,0.22); color: #fff; }
 
 /* ── SHARE BUTTON ── */
 .btn-share {
-  background: #FF6B8A;
+  background: var(--accent);
   color: #fff;
   border: none;
-  border-radius: 24px;
-  padding: 12px 22px;
-  font-size: 0.88rem;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 4px 20px rgba(255, 107, 138, 0.5);
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  padding: 0 var(--sp-3);
   animation: btn-appear 0.4s cubic-bezier(0.34,1.4,0.64,1) both;
-  white-space: nowrap;
 }
 .btn-share:hover {
-  background: #e84f74;
+  background: var(--accent-hover);
   transform: translateY(-2px);
-  box-shadow: 0 6px 26px rgba(255, 107, 138, 0.6);
-}
-
-/* ── RECIPIENT CUT BUTTON ── */
-.received-cut {
-  padding: 13px 26px;
-  font-size: 0.92rem;
-  box-shadow: 0 6px 24px rgba(0,0,0,0.3);
 }
 
 /* ── SLICE ACTION ROW (creator preview: 처음으로 + 선물하기) ── */
 .slice-actions {
   display: flex;
-  gap: 10px;
+  gap: var(--sp-1);
   align-items: center;
 }
 
@@ -514,18 +605,11 @@ html, body, #root {
   background: #fff;
   color: #222;
   border: none;
-  border-radius: 24px;
-  padding: 13px 28px;
-  font-size: 0.9rem;
-  font-weight: 700;
-  cursor: pointer;
-  box-shadow: 0 6px 28px rgba(0,0,0,0.32);
+  padding: 0 var(--sp-3);
   letter-spacing: 0.1px;
-  transition: transform 0.15s, box-shadow 0.2s;
 }
 .btn-create:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 32px rgba(0,0,0,0.4);
 }
 
 /* ── INIT LOADING ── */

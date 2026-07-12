@@ -24,13 +24,14 @@ const cakes = [
 
 function findFreePos(existing, cW, cH) {
   const gap = 16
-  // Search panel: right=28, width=296 → left edge at cW-324
-  // Card right edge must stay 16px clear → card_x ≤ cW-324-16-CARD_W = cW-544
-  const xMax = Math.max(cW * 0.5, cW - 544)
+  // Search panel: right=32, width=296 → left edge at cW-328
+  // Card right edge must stay 16px clear → card_x ≤ cW-328-16-CARD_W = cW-548
+  const xMax = Math.max(cW * 0.5, cW - 548)
   // Mirror right exclusion on left so distribution centers around cake (cW/2)
   const xMin = Math.max(16, Math.min(cW * 0.22, xMax - CARD_W - gap))
   const yMin = Math.max(16, cH * 0.08)
-  const yMax = Math.min(cH - CARD_H - 110, cH * 0.86)
+  // Bottom-right add-button is 44px tall, 32px from the edge — keep clear of it
+  const yMax = Math.min(cH - CARD_H - 112, cH * 0.86)
   for (let t = 0; t < 400; t++) {
     const x = xMin + Math.random() * (xMax - xMin)
     const y = yMin + Math.random() * (yMax - yMin)
@@ -44,7 +45,7 @@ function findFreePos(existing, cW, cH) {
 }
 
 function genCollagePos(count, cake) {
-  const gap = 14
+  const gap = 16
   const vw = window.innerWidth, vh = window.innerHeight
 
   // Mirror the .cake-bg CSS sizing (height: 82vh, width: auto, max-width: 90vw,
@@ -142,13 +143,15 @@ export default function App() {
   const [results, setResults]         = useState([])
   const [loading, setLoading]         = useState(false)
   const [searchError, setSearchError] = useState('')
-  const [phase, setPhase]             = useState('landing')
+  const [phase, setPhase]             = useState('whole')
+  const [showIntro, setShowIntro]     = useState(true)
   const [collagePos, setCollagePos]   = useState([])
   const [isGift, setIsGift]           = useState(false)
   const [shareCopied, setShareCopied] = useState(false)
   const [initLoading, setInitLoading] = useState(false)
   const [makerName, setMakerName]     = useState('')
   const [editingName, setEditingName] = useState(false)
+  const [showGiftReveal, setShowGiftReveal] = useState(false)
 
   // Load shared cake from URL params on mount
   useEffect(() => {
@@ -184,6 +187,7 @@ export default function App() {
       setIngredients(withPos)
       setIsGift(true)
       setPhase('received')
+      setShowGiftReveal(true)
       setInitLoading(false)
     })
   }, [])
@@ -244,6 +248,7 @@ export default function App() {
     if (ingredients.length >= MAX_MOVIES) return
     const pos = findFreePos(ingredients.map(m => m.pos), window.innerWidth, window.innerHeight)
     setIngredients(prev => [...prev, { ...movie, pos }])
+    setShowIntro(false)
   }, [ingredients])
 
   function removeIngredient(id) {
@@ -286,6 +291,7 @@ export default function App() {
     setShareCopied(false)
     setMakerName('')
     setEditingName(false)
+    setShowIntro(true)
   }
 
   function goCreate() {
@@ -299,6 +305,7 @@ export default function App() {
     setShareCopied(false)
     setMakerName('')
     setEditingName(false)
+    setShowIntro(true)
   }
 
   function changeCake(c) {
@@ -307,6 +314,7 @@ export default function App() {
   }
 
   const canShare = ingredients.length >= MIN_SHARE
+  const cuttable = (phase === 'whole' && canShare) || phase === 'received'
 
   return (
     <div className="canvas" ref={canvasRef}>
@@ -325,23 +333,47 @@ export default function App() {
         <div className="cake-bg-wrap">
           <img key={`${cake.id}-${phase}`} className="cake-bg"
                src={phase === 'sliced' ? cake.slice : cake.img} alt=""
-               style={cake.yOffset && phase !== 'sliced' ? { transform: `translateY(${cake.yOffset}vh)` } : undefined} />
+               onClick={cuttable ? handleCut : undefined}
+               style={{
+                 ...(cake.yOffset && phase !== 'sliced' ? { transform: `translateY(${cake.yOffset}vh)` } : null),
+                 cursor: cuttable ? 'pointer' : undefined,
+               }} />
           <div className="cake-vignette" />
         </div>
       )}
 
-      {/* ── HERO: first-screen intro ── */}
-      {phase === 'landing' && !initLoading && (
-        <div className="hero-overlay">
-          <h1 className="hero-title">좋아하는 영화를<br />케이크에 숨겨 선물하세요.</h1>
-          <button className="hero-cta" onClick={() => setPhase('whole')}>케이크 만들기</button>
+      {/* ── CUT HINT: nudge toward clicking the cake itself ── */}
+      {cuttable && !initLoading && (
+        <div className="cake-cut-hint" key={phase}>케이크를 클릭해서 잘라보세요</div>
+      )}
+
+      {/* ── INTRO POPUP: quick how-to, shown until the first movie is added ── */}
+      {phase === 'whole' && showIntro && !isGift && (
+        <div className="intro-popup-backdrop" onClick={() => setShowIntro(false)}>
+          <div className="intro-popup" onClick={e => e.stopPropagation()}>
+            <button className="intro-popup-x" onClick={() => setShowIntro(false)}>✕</button>
+            <p className="intro-popup-title">좋아하는 영화를<br />케이크에 숨겨 선물하세요.</p>
+            <p className="intro-popup-body">영화 5~10편을 골라 케이크를 만들면,<br />친구가 잘라볼 수 있어요.</p>
+          </div>
+        </div>
+      )}
+
+      {/* ── GIFT REVEAL: shown once when a recipient first opens a shared link ── */}
+      {phase === 'received' && showGiftReveal && !initLoading && (
+        <div className="intro-popup-backdrop" onClick={() => setShowGiftReveal(false)}>
+          <div className="intro-popup" onClick={e => e.stopPropagation()}>
+            <button className="intro-popup-x" onClick={() => setShowGiftReveal(false)}>✕</button>
+            <p className="intro-popup-title">
+              {makerName ? `${makerName}님이` : '누군가가'}<br />취향 케이크를 보냈어요.
+            </p>
+            <p className="intro-popup-body">안에는 어떤 영화가 있을까요?</p>
+          </div>
         </div>
       )}
 
       {/* ── CAKE NAME TAG: who made it, so a gift recipient can tell ── */}
-      {phase !== 'cutting' && phase !== 'landing' && !initLoading && (isGift ? makerName : true) && (
+      {phase !== 'cutting' && !initLoading && (isGift ? makerName : true) && (
         <div className="cake-name-tag">
-          <span className="cake-name-label">Made by</span>
           {isGift ? (
             <span className="cake-name-value">{makerName}</span>
           ) : editingName ? (
@@ -355,9 +387,13 @@ export default function App() {
               maxLength={20}
               autoFocus
             />
-          ) : (
+          ) : makerName ? (
             <button className="cake-name-value cake-name-edit" onClick={() => setEditingName(true)}>
-              {makerName || '이름을 입력하세요'}
+              {makerName}
+            </button>
+          ) : (
+            <button className="cake-name-label cake-name-edit" onClick={() => setEditingName(true)}>
+              Made by
             </button>
           )}
         </div>
@@ -382,9 +418,12 @@ export default function App() {
             return (
               <div key={movie.id} className="collage-poster"
                    style={{ position: 'fixed', left: p.x, top: p.y, width: p.w, height: p.h, animationDelay: `${i * 75}ms` }}>
-                {movie.poster_path
-                  ? <img src={`${POSTER}${movie.poster_path}`} alt={movie.title} />
-                  : <div className="collage-fallback">{movie.title[0]}</div>}
+                <div className="collage-poster-inner">
+                  {movie.poster_path
+                    ? <img src={`${POSTER}${movie.poster_path}`} alt={movie.title} />
+                    : <div className="collage-fallback">{movie.title[0]}</div>}
+                </div>
+                <span className="collage-poster-title">{movie.title}</span>
               </div>
             )
           })}
@@ -444,7 +483,7 @@ export default function App() {
       {/* ── ACTION BUTTONS: recipient ── */}
       {phase === 'received' && !initLoading && (
         <div className="ui-actions">
-          <button className="btn-cut received-cut" onClick={handleCut}>
+          <button className="btn-cut" onClick={handleCut}>
             <KnifeIcon /> 케이크 자르기
           </button>
         </div>
