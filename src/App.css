@@ -468,7 +468,7 @@ html, body, #root {
   transform: translateX(-50%);
   background: linear-gradient(to bottom, #fff 0%, #e8c073 50%, #fff 100%);
   box-shadow: 0 0 14px rgba(0,0,0,0.4), 0 0 6px rgba(255,255,255,0.9);
-  animation: cut-draw 0.28s ease forwards, cut-fade 0.35s ease 0.3s forwards;
+  animation: cut-draw 0.38s ease-out forwards, cut-fade 0.3s ease 0.5s forwards;
   clip-path: inset(0 0 100% 0);
 }
 

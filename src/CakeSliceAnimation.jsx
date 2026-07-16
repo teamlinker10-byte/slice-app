@@ -15,7 +15,9 @@ export default function CakeSliceAnimation({ cake, onComplete }) {
   const [showCrack, setShowCrack] = useState(false)
   const [revealed, setRevealed] = useState(false)
 
-  useEffect(() => { runCut() }, [])
+  useEffect(() => {
+    runCut()
+  }, [])
 
   async function runCut() {
     // 칼 등장
@@ -31,7 +33,8 @@ export default function CakeSliceAnimation({ cake, onComplete }) {
       },
     })
 
-    // 칼 내려감 — "슥"
+    // 칼 내려감 — "슥" + 황금선 동시 등장
+    setShowCrack(true)
     await knife.start({
       y: [`${ARC_Y}vh`, `${MID_Y}vh`, `${CUT_Y}vh`],
       transition: {
@@ -42,19 +45,19 @@ export default function CakeSliceAnimation({ cake, onComplete }) {
     })
 
     // 잠깐 멈춤
-    await wait(200)
+    await wait(150)
 
-    // 크림 갈라짐 + 칼 퇴장
-    setShowCrack(true)
+    // 칼 퇴장 (크랙 라인은 이미 표시된 채로 서서히 사라짐)
     knife.start({ opacity: 0, transition: { duration: 0.3 } })
-    await wait(320)
+    await wait(300)
 
-    // 화면 확대 + 흔들림
+    // 표면이 출렁이다 잦아드는 정착 모션 (자른 직후, 칼이 사라진 뒤)
     await cakeMotion.start({
-      scale: [1, 1.06, 1.05, 1.05],
-      x: [0, -6, 5, -3, 0],
-      rotate: [0, -1.2, 1, -0.5, 0],
-      transition: { duration: 0.45, ease: 'easeOut' },
+      scale: [1, 1.06, 1.04, 1.05, 1.05, 1.05],
+      x: [0, -7, 6, -5, 4, -2.5, 1.5, -0.5, 0],
+      rotate: [0, -1.4, 1.2, -1, 0.7, -0.4, 0.2, -0.1, 0],
+      skewX: [0, 1.1, -0.7, 0.4, -0.2, 0.1, 0],
+      transition: { duration: 0.85, ease: 'easeOut' },
     })
 
     // 조각 케이크 등장 (크로스페이드) — 확대 상태를 유지하며 자연스럽게 정착
@@ -63,6 +66,7 @@ export default function CakeSliceAnimation({ cake, onComplete }) {
       scale: 1,
       x: 0,
       rotate: 0,
+      skewX: 0,
       transition: { duration: 0.5, ease: [0.2, 0.8, 0.2, 1] },
     })
 

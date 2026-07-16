@@ -97,28 +97,6 @@ function genCollagePos(count, cake) {
   return placed
 }
 
-function KnifeIcon() {
-  return (
-    <svg viewBox="0 0 56 80" width="18" height="26" fill="none">
-      <path d="M8 54 L28 6 L48 54 Z" fill="#ccc" stroke="#aaa" strokeWidth="1.5" strokeLinejoin="round"/>
-      <rect x="6" y="54" width="44" height="6" rx="2" fill="#8B5E3C"/>
-      <rect x="20" y="60" width="16" height="16" rx="3.5" fill="#6B3F22"/>
-    </svg>
-  )
-}
-
-function GiftIcon() {
-  return (
-    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-      <polyline points="20 12 20 22 4 22 4 12"/>
-      <rect x="2" y="7" width="20" height="5"/>
-      <line x1="12" y1="22" x2="12" y2="7"/>
-      <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
-      <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
-    </svg>
-  )
-}
-
 function MovieCard({ movie, onRemove }) {
   return (
     <div className="movie-card" style={{ left: movie.pos.x, top: movie.pos.y }}>
@@ -434,7 +412,7 @@ export default function App() {
                 <div className="slice-actions">
                   <button className="btn-reset" onClick={backToWhole}>← 처음으로</button>
                   <button className="btn-share" onClick={handleShare}>
-                    <GiftIcon /> {shareCopied ? '링크 복사됨 ✓' : '선물하기'}
+                    {shareCopied ? '링크 복사됨 ✓' : '선물하기'}
                   </button>
                 </div>
               )
@@ -463,10 +441,10 @@ export default function App() {
       {phase === 'whole' && canShare && (
         <div className="ui-actions">
           <button className="btn-share" onClick={handleShare}>
-            <GiftIcon /> {shareCopied ? '링크 복사됨 ✓' : '케이크 선물하기'}
+            {shareCopied ? '링크 복사됨 ✓' : '케이크 선물하기'}
           </button>
           <button className="btn-cut" onClick={handleCut}>
-            <KnifeIcon /> 케이크 미리 맛보기
+            케이크 미리 맛보기
           </button>
         </div>
       )}
@@ -484,7 +462,7 @@ export default function App() {
       {phase === 'received' && !initLoading && (
         <div className="ui-actions">
           <button className="btn-cut" onClick={handleCut}>
-            <KnifeIcon /> 케이크 자르기
+            케이크 자르기
           </button>
         </div>
       )}
