@@ -60,14 +60,19 @@ export default function CakeSliceAnimation({ cake, onComplete }) {
       transition: { duration: 0.85, ease: 'easeOut' },
     })
 
-    // 조각 케이크 등장 (크로스페이드) — 확대 상태를 유지하며 자연스럽게 정착
+    // 조각 케이크 등장 (크로스페이드) — 임팩트 있게 확 커졌다가 제자리로 정착
     setRevealed(true)
     await cakeMotion.start({
-      scale: 1,
+      scale: [1.05, 1.22, 1],
       x: 0,
       rotate: 0,
       skewX: 0,
-      transition: { duration: 0.5, ease: [0.2, 0.8, 0.2, 1] },
+      transition: {
+        scale: { duration: 0.6, times: [0, 0.35, 1], ease: ['easeOut', [0.16, 1, 0.3, 1]] },
+        x: { duration: 0.5, ease: [0.2, 0.8, 0.2, 1] },
+        rotate: { duration: 0.5, ease: [0.2, 0.8, 0.2, 1] },
+        skewX: { duration: 0.5, ease: [0.2, 0.8, 0.2, 1] },
+      },
     })
 
     onComplete()
